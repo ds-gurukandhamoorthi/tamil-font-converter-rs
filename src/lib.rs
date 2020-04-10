@@ -124,6 +124,7 @@ pub fn parse_composed_entity(i: &str) -> IResult<&str, TamilDetailedEntity> {
 
 pub fn parse_entity(i: &str) -> IResult<&str, TamilDetailedEntity> {
     alt((
+        parse_sri,
         parse_separate_entity,
         parse_composed_entity,
         parse_not_markable,
@@ -141,6 +142,50 @@ mod tests {
     }
 }
 
+fn conv_special_entity(unicode_string: &str) -> Option<String> {
+    match unicode_string{
+        "ஸ்ரீ" => Some(String::from("\u{f070}")),
+        _ => None,
+    }
+}
+fn conv_composed_entity(stmzhchar: char, umark: char) -> String {
+    let mut res = String::with_capacity(4);
+    match umark {
+        '\u{0bbe}' => { //A nedil
+            res.push(stmzhchar);
+            res.push('\u{f056}');
+        }
+        '\u{0bc6}' => { //E kuril
+            res.push('\u{f0d8}');
+            res.push(stmzhchar);
+        }
+        '\u{0bc7}' => { //E nedil
+            res.push('\u{f0bc}');
+            res.push(stmzhchar);
+        }
+        '\u{0bc8}' => { //AI
+            res.push('\u{f0e7}');
+            res.push(stmzhchar);
+        }
+        '\u{0bca}' => { // O kuril
+            res.push('\u{f0d8}');
+            res.push(stmzhchar);
+            res.push('\u{f056}');
+        }
+        '\u{0bcb}' => { //O nedil
+            res.push('\u{f0bc}');
+            res.push(stmzhchar);
+            res.push('\u{f056}');
+        }
+        '\u{0bcc}' => { //AU
+            res.push('\u{f0d8}');
+            res.push(stmzhchar);
+            res.push('\u{f065}');
+        }
+        _ => panic!("Error"),
+    }
+    res
+}
 
 
 pub fn convert_unic_stmzh(source: &str) -> String {
@@ -212,24 +257,119 @@ pub fn convert_unic_stmzh(source: &str) -> String {
     UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஸ','\u{0bcd}'), '\u{f0fc}');
     UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஹ','\u{0bcd}'), '\u{f0e3}');
 
+    //I kuril
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('க','\u{0bbf}'), '\u{f0fe}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ச','\u{0bbf}'), '\u{f045}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ட','\u{0bbf}'), '\u{f0bd}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ண','\u{0bbf}'), '\u{f0e8}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('த','\u{0bbf}'), '\u{f05d}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ந','\u{0bbf}'), '\u{f057}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ப','\u{0bbf}'), '\u{f0b8}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ம','\u{0bbf}'), '\u{f074}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ய','\u{0bbf}'), '\u{f06c}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ர','\u{0bbf}'), '\u{f0f6}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ல','\u{0bbf}'), '\u{f06f}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('வ','\u{0bbf}'), '\u{f073}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ழ','\u{0bbf}'), '\u{f061}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ள','\u{0bbf}'), '\u{f0b9}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ற','\u{0bbf}'), '\u{f0a4}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ன','\u{0bbf}'), '\u{f04d}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஷ','\u{0bbf}'), '\u{f0b4}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஜ','\u{0bbf}'), '\u{f0f7}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஸ','\u{0bbf}'), '\u{f04c}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஹ','\u{0bbf}'), '\u{f04e}');
+
+
+    //I Nedil
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('க','\u{0bc0}'), '\u{f0ff}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ச','\u{0bc0}'), '\u{f0e6}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ட','\u{0bc0}'), '\u{f0cf}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ண','\u{0bc0}'), '\u{f0a7}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('த','\u{0bc0}'), '\u{f079}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ந','\u{0bc0}'), '\u{f0c0}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ப','\u{0bc0}'), '\u{f0ac}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ம','\u{0bc0}'), '\u{f02a}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ய','\u{0bc0}'), '\u{f058}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ர','\u{0bc0}'), '\u{f05a}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ல','\u{0bc0}'), '\u{f0dc}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('வ','\u{0bc0}'), '\u{f054}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ழ','\u{0bc0}'), '\u{f0d1}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ள','\u{0bc0}'), '\u{f043}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ற','\u{0bc0}'), '\u{f053}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ன','\u{0bc0}'), '\u{f0cc}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஷ','\u{0bc0}'), '\u{f055}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஜ','\u{0bc0}'), '\u{f0fd}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஸ','\u{0bc0}'), '\u{f0a2}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஹ','\u{0bc0}'), '\u{f0ea}');
+
+    //U Kuril
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('க','\u{0bc1}'), '\u{f07a}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ச','\u{0bc1}'), '\u{f0b7}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ட','\u{0bc1}'), '\u{f07c}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ண','\u{0bc1}'), '\u{f062}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('த','\u{0bc1}'), '\u{f06d}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ந','\u{0bc1}'), '\u{f04f}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ப','\u{0bc1}'), '\u{f041}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ம','\u{0bc1}'), '\u{f078}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ய','\u{0bc1}'), '\u{f0a5}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ர','\u{0bc1}'), '\u{f0f2}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ல','\u{0bc1}'), '\u{f04b}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('வ','\u{0bc1}'), '\u{f0a1}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ழ','\u{0bc1}'), '\u{f0bf}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ள','\u{0bc1}'), '\u{f0d3}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ற','\u{0bc1}'), '\u{f0ae}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ன','\u{0bc1}'), '\u{f0d0}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஷ','\u{0bc1}'), '\u{f0d7}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஜ','\u{0bc1}'), '\u{f068}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஸ','\u{0bc1}'), '\u{f071}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஹ','\u{0bc1}'), '\u{f0f8}');
+
+    //U Nedil
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('க','\u{0bc2}'), '\u{f0ed}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ச','\u{0bc2}'), '\u{f0f3}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ட','\u{0bc2}'), '\u{f0f9}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ண','\u{0bc2}'), '\u{f049}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('த','\u{0bc2}'), '\u{f023}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ந','\u{0bc2}'), '\u{f0b1}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ப','\u{0bc2}'), '\u{f0af}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ம','\u{0bc2}'), '\u{f04a}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ய','\u{0bc2}'), '\u{f052}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ர','\u{0bc2}'), '\u{f0d4}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ல','\u{0bc2}'), '\u{f0d9}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('வ','\u{0bc2}'), '\u{f0c6}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ழ','\u{0bc2}'), '\u{f0f1}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ள','\u{0bc2}'), '\u{f06a}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ற','\u{0bc2}'), '\u{f047}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ன','\u{0bc2}'), '\u{f0fb}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஷ','\u{0bc2}'), '\u{f0a3}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஜ','\u{0bc2}'), '\u{f0c9}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஸ','\u{0bc2}'), '\u{f060}');
+    UNIC_STMZH_MAP_TUPLE_CHAR.insert(('ஹ','\u{0bc2}'), '\u{f0da}');
+
     let mut data = source;
-    let it = std::iter::from_fn(move || {
-        match parse_entity(data) {
-            Ok((i, o)) => {
-                data = i;
-                Some(o)
+        let it = std::iter::from_fn(move || {
+            match parse_entity(data) {
+                Ok((i, o)) => {
+                    data = i;
+                    Some(o)
+                }
+                _ => None
             }
-            _ => None
-        }
-    });
+        });
 
     let mut output: String= "".to_string();
 
     for entity in it {
+        use TamilDetailedEntity::*;
         match entity {
-            TamilDetailedEntity::Vowel(v) => output.push(*UNIC_STMZH_MAP_CHAR_CHAR.get(&v).unwrap()),
-            TamilDetailedEntity::Consonant(v) => output.push(*UNIC_STMZH_MAP_CHAR_CHAR.get(&v).unwrap()),
-            TamilDetailedEntity::SeparateEntity((c,m)) => output.push(*UNIC_STMZH_MAP_TUPLE_CHAR.get(&(c,m)).unwrap()),
+            Consonant (c) | Vowel(c) => output.push(*UNIC_STMZH_MAP_CHAR_CHAR.get(&c).unwrap()),
+            SeparateEntity((c,m)) => output.push(*UNIC_STMZH_MAP_TUPLE_CHAR.get(&(c,m)).unwrap()),
+            Other(c) => output.push(c),
+            ComposedEntity((c,_, m)) => {
+                let stmzhchar = UNIC_STMZH_MAP_CHAR_CHAR.get(&c).unwrap();
+                output.push_str(&conv_composed_entity(*stmzhchar, m));
+            },
+            SpecialEntity(ustring) => output.push_str(&conv_special_entity(ustring).unwrap()),
             _ => ()
         }
     }
