@@ -436,7 +436,7 @@ pub fn add_event_input() {
 
     let source = document.get_element_by_id("source")
         .expect("the html page should have an element with id `source`")
-        .dyn_ref::<web_sys::HtmlInputElement>()
+        .dyn_ref::<web_sys::HtmlTextAreaElement>()
         .expect("source must be an `HtmlElement`").clone();
     let output = document.get_element_by_id("output")
         .unwrap()
