@@ -16,9 +16,10 @@ use std::collections::HashMap;
 pub enum TamilDetailedEntity<'a>{
     Vowel(char),
     Consonant(char),
+    MarkedSpecialConsonant((&'a str, MarkType, char)), //kshi..., kshe...
     SeparateEntity((char, char)),
     ComposedEntity((char, MarkType, char)),
-    SpecialEntity(&'a str), //sri ...
+    SpecialEntity(&'a str), //sri, ksha ...
     Mark((MarkType, char)),
     Other(char),
     // RidingMark(char),
@@ -36,9 +37,23 @@ pub enum MarkType {
 }
 
 
-fn parse_sri(i: &str) -> IResult<&str, TamilDetailedEntity> {
-    let (i, entity) = tag("ஸ்ரீ")(i)?;
+fn parse_sri(i: &str) -> IResult<&str, &str> {
+    tag("ஸ்ரீ")(i)
+}
+
+fn parse_ksha(i: &str) -> IResult<&str, &str> {
+    tag("க்ஷ")(i)
+}
+
+fn parse_special_entity(i: &str) -> IResult<&str, TamilDetailedEntity> {
+    let (i, entity) =  alt((parse_sri, parse_ksha))(i)?;
     Ok((i, TamilDetailedEntity::SpecialEntity(entity)))
+}
+
+fn parse_marked_special_consonant(i: &str) -> IResult<&str, TamilDetailedEntity> {
+    let (i, entity) = parse_ksha(i)?;
+    let (i, (mark_type, mark)) = parse_mark(i)?;
+    Ok((i, TamilDetailedEntity::MarkedSpecialConsonant((entity, mark_type, mark))))
 }
 
 fn parse_vowel(i: &str) -> IResult<&str, TamilDetailedEntity> {
@@ -88,12 +103,11 @@ fn parse_non_riding_mark(i: &str) -> IResult<&str, (MarkType, char)> {
     ))(i)
 }
 
-fn parse_mark(i: &str) -> IResult<&str, TamilDetailedEntity> {
-    let (i, o) = alt((
+fn parse_mark(i: &str) -> IResult<&str, (MarkType, char)> {
+    alt((
         parse_riding_mark,
         parse_non_riding_mark,
-    ))(i)?;
-    Ok((i, TamilDetailedEntity::Mark(o)))
+    ))(i)
 }
 
 fn parse_other(i: &str) -> IResult<&str, TamilDetailedEntity> {
@@ -104,7 +118,7 @@ fn parse_other(i: &str) -> IResult<&str, TamilDetailedEntity> {
 
 fn parse_not_markable(i: &str) -> IResult<&str, TamilDetailedEntity> {
     alt((
-        parse_sri,
+        parse_special_entity,
         parse_vowel,
     ))(i)
 }
@@ -124,7 +138,8 @@ pub fn parse_composed_entity(i: &str) -> IResult<&str, TamilDetailedEntity> {
 
 pub fn parse_entity(i: &str) -> IResult<&str, TamilDetailedEntity> {
     alt((
-        parse_sri,
+        parse_marked_special_consonant,
+        parse_special_entity,
         parse_separate_entity,
         parse_composed_entity,
         parse_not_markable,
@@ -145,9 +160,32 @@ mod tests {
 fn conv_special_entity(unicode_string: &str) -> Option<String> {
     match unicode_string{
         "ஸ்ரீ" => Some(String::from("\u{f070}")),
-        _ => None,
+        "க்ஷ" => Some(String::from("\u{f0b3}")),
+        _ => panic!("unknown special entity"),
     }
 }
+
+fn conv_marked_special_entity(unicode_string: &str, mark: char ) -> Option<String> {
+    if unicode_string == "க்ஷ" {
+        match mark {
+            '\u{0bcd}' => return Some(String::from("\u{f0d5}")),
+            '\u{0bbf}' => return Some(String::from("\u{f048}")),
+            '\u{0bc0}' => return Some(String::from("\u{f0c8}")),
+            '\u{0bc1}' => return Some(String::from("\u{f059}")),
+            '\u{0bc2}' => return Some(String::from("\u{f066}")),
+            '\u{0bbe}' => return Some(String::from("\u{f0b3}\u{f056}")),
+            '\u{0bc6}' => return Some(String::from("\u{f0d8}\u{f0b3}")),
+            '\u{0bc7}' => return Some(String::from("\u{f0bc}\u{f0b3}")),
+            '\u{0bc8}' => return Some(String::from("\u{f0e7}\u{f0b3}")),
+            '\u{0bca}' => return Some(String::from("\u{f0d8}\u{f0b3}\u{f056}")),
+            '\u{0bcb}' => return Some(String::from("\u{f0bc}\u{f0b3}\u{f056}")),
+            '\u{0bcc}' => return Some(String::from("\u{f0d8}\u{f0b3}\u{f065}")),
+            _ => return None,
+        }
+    }
+    None
+}
+
 fn conv_composed_entity(stmzhchar: char, umark: char) -> String {
     let mut res = String::with_capacity(4);
     match umark {
@@ -363,13 +401,24 @@ pub fn convert_unic_stmzh(source: &str) -> String {
         use TamilDetailedEntity::*;
         match entity {
             Consonant (c) | Vowel(c) => output.push(*UNIC_STMZH_MAP_CHAR_CHAR.get(&c).unwrap()),
-            SeparateEntity((c,m)) => output.push(*UNIC_STMZH_MAP_TUPLE_CHAR.get(&(c,m)).unwrap()),
+            SeparateEntity((c,m)) => {
+                let res = UNIC_STMZH_MAP_TUPLE_CHAR.get(&(c,m));
+                match res {
+                    Some(c) => output.push(*c),
+                    None => { //In case of character not having equivalent in stmzh, we just output the original unicode.
+                        output.push(c);
+                        output.push(m);
+                    }
+                }
+            },
             Other(c) => output.push(c),
             ComposedEntity((c,_, m)) => {
                 let stmzhchar = UNIC_STMZH_MAP_CHAR_CHAR.get(&c).unwrap();
                 output.push_str(&conv_composed_entity(*stmzhchar, m));
             },
             SpecialEntity(ustring) => output.push_str(&conv_special_entity(ustring).unwrap()),
+            MarkedSpecialConsonant((ustring, _, mark)) => output.push_str(&conv_marked_special_entity(ustring, mark).unwrap()),
+
             _ => ()
         }
     }
