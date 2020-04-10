@@ -1,3 +1,6 @@
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+use gloo::{events::EventListener};
 // pub struct TamilEntities{
 //     composedEntity(&str),
 //     separateEntity(&str),
@@ -226,6 +229,7 @@ fn conv_composed_entity(stmzhchar: char, umark: char) -> String {
 }
 
 
+#[wasm_bindgen]
 pub fn convert_unic_stmzh(source: &str) -> String {
     let mut UNIC_STMZH_MAP_CHAR_CHAR = HashMap::new();
     //Vowels
@@ -424,3 +428,31 @@ pub fn convert_unic_stmzh(source: &str) -> String {
     }
     output.to_string()
 }
+
+pub fn add_event_input() {
+    let window = web_sys::window().expect("global window does not exist");
+    let document = window.document().expect("window must have a document");
+
+
+    let source = document.get_element_by_id("source")
+        .expect("the html page should have an element with id `source`")
+        .dyn_ref::<web_sys::HtmlInputElement>()
+        .expect("source must be an `HtmlElement`").clone();
+    let output = document.get_element_by_id("output")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlDivElement>()
+        .unwrap();
+    let on_input = EventListener::new(&source, "input", move |event| {
+            let trg = event.target().expect("event target does exist");
+            let trg = trg.dyn_ref::<web_sys::HtmlInputElement>().expect("event target must be an `HtmlInputElement`");
+            let source_value = trg.value();
+            output.set_text_content(Some(&convert_unic_stmzh(&source_value)));
+        });
+    on_input.forget();
+}
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    add_event_input();
+}
+
