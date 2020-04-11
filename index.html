@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-</head>
-<body>
- <script type="module">
-   import init from "./pkg/tamil_font_converter_rs.js";
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  </head>
+  <body>
+    <script type="module">
+      import init from "./pkg/tamil_font_converter_rs.js";
    init();
- </script>
- <form>
- <div class="form-group">
-   <textarea id="source" value="Paste here in unicode" type="text" class="form-control" rows="30" cols="60"></textarea>
- </div>
- <div class="form-group">
-  <div id="output"></div>
- </div>
- </form>
+    </script>
+    <form>
+      <div class="row">
+        <div class="col-md-6">
+          <textarea id="source" value="Paste here in unicode" type="text" class="form-control" rows="30" cols="60"></textarea>
+        </div>
+        <div class="col-md-6">
+          <div id="output"></div>
+        </div>
+      </div>
+    </form>
 
-</body>
+  </body>
 </html>
